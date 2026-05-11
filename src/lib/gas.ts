@@ -1,13 +1,36 @@
 const GAS_URL = process.env.NEXT_PUBLIC_GAS_URL || ''
 
-async function gasCall<T>(payload: object): Promise<T> {
-  if (!GAS_URL) throw new Error('NEXT_PUBLIC_GAS_URL non définie dans .env.local')
-  const url = `${GAS_URL}?payload=${encodeURIComponent(JSON.stringify(payload))}`
-  const res = await fetch(url, { redirect: 'follow' })
-  if (!res.ok) throw new Error(`Erreur HTTP ${res.status}`)
-  const data = await res.json()
-  if (data.error) throw new Error(data.error)
-  return data as T
+function gasCall<T>(payload: object): Promise<T> {
+  if (!GAS_URL) return Promise.reject(new Error('NEXT_PUBLIC_GAS_URL non définie'))
+
+  return new Promise<T>((resolve, reject) => {
+    const cbName = `_gas_${Date.now()}_${Math.random().toString(36).slice(2)}`
+    const script = document.createElement('script')
+
+    const cleanup = () => {
+      delete (window as Record<string, unknown>)[cbName]
+      script.parentNode?.removeChild(script)
+    }
+
+    ;(window as Record<string, unknown>)[cbName] = (data: T & { error?: string }) => {
+      cleanup()
+      if (data.error) reject(new Error(data.error))
+      else resolve(data)
+    }
+
+    const params = new URLSearchParams({
+      payload: JSON.stringify(payload),
+      callback: cbName,
+    })
+
+    script.src = `${GAS_URL}?${params.toString()}`
+    script.onerror = () => {
+      cleanup()
+      reject(new Error('Impossible de contacter le serveur'))
+    }
+
+    document.head.appendChild(script)
+  })
 }
 
 // — Types —
@@ -95,7 +118,6 @@ export const api = {
     image_mime?: string
     chapter_id?: string
   }) {
-    // image_base64 exclu — trop volumineux pour un paramètre GET
     const { image_base64: _img, image_mime: _mime, ...rest } = payload
     return gasCall<{ success: boolean; note: number; feedback: string; imageUrl: string | null }>({
       action: 'submitRedaction',
