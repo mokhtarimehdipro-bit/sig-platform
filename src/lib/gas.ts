@@ -1,21 +1,23 @@
 const GAS_URL = process.env.NEXT_PUBLIC_GAS_URL || ''
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 function gasCall<T>(payload: object): Promise<T> {
   if (!GAS_URL) return Promise.reject(new Error('NEXT_PUBLIC_GAS_URL non définie'))
 
   return new Promise<T>((resolve, reject) => {
     const cbName = `_gas_${Date.now()}_${Math.random().toString(36).slice(2)}`
     const script = document.createElement('script')
+    const w = window as any
 
     const cleanup = () => {
-      delete (window as Record<string, unknown>)[cbName]
-      script.parentNode?.removeChild(script)
+      delete w[cbName]
+      if (script.parentNode) script.parentNode.removeChild(script)
     }
 
-    ;(window as Record<string, unknown>)[cbName] = (data: T & { error?: string }) => {
+    w[cbName] = (data: any) => {
       cleanup()
-      if (data.error) reject(new Error(data.error))
-      else resolve(data)
+      if (data && data.error) reject(new Error(data.error))
+      else resolve(data as T)
     }
 
     const params = new URLSearchParams({
@@ -32,6 +34,7 @@ function gasCall<T>(payload: object): Promise<T> {
     document.head.appendChild(script)
   })
 }
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 // — Types —
 
@@ -119,6 +122,7 @@ export const api = {
     chapter_id?: string
   }) {
     const { image_base64: _img, image_mime: _mime, ...rest } = payload
+    void _img; void _mime
     return gasCall<{ success: boolean; note: number; feedback: string; imageUrl: string | null }>({
       action: 'submitRedaction',
       ...rest,
