@@ -1,16 +1,9 @@
-// Client GAS — toutes les requêtes transitent ici
-// Content-Type: text/plain évite le preflight CORS
-
 const GAS_URL = process.env.NEXT_PUBLIC_GAS_URL || ''
 
-async function gasPost<T>(payload: object): Promise<T> {
+async function gasCall<T>(payload: object): Promise<T> {
   if (!GAS_URL) throw new Error('NEXT_PUBLIC_GAS_URL non définie dans .env.local')
-  const res = await fetch(GAS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(payload),
-    redirect: 'follow',
-  })
+  const url = `${GAS_URL}?payload=${encodeURIComponent(JSON.stringify(payload))}`
+  const res = await fetch(url, { redirect: 'follow' })
   if (!res.ok) throw new Error(`Erreur HTTP ${res.status}`)
   const data = await res.json()
   if (data.error) throw new Error(data.error)
@@ -70,19 +63,19 @@ export interface ScoresResponse {
 
 export const api = {
   login(access_code: string, mdp: string) {
-    return gasPost<Session & { success: boolean }>({ action: 'login', access_code, mdp })
+    return gasCall<Session & { success: boolean }>({ action: 'login', access_code, mdp })
   },
 
   getChapters() {
-    return gasPost<{ chapters: Chapter[] }>({ action: 'getChapters' })
+    return gasCall<{ chapters: Chapter[] }>({ action: 'getChapters' })
   },
 
   getQCM(chapter_id: string) {
-    return gasPost<{ questions: QCMQuestion[] }>({ action: 'getQCM', chapter_id })
+    return gasCall<{ questions: QCMQuestion[] }>({ action: 'getQCM', chapter_id })
   },
 
   submitQCM(access_code: string, chapter_id: string, score: number) {
-    return gasPost<{ success: boolean; scoreTotal: number }>({
+    return gasCall<{ success: boolean; scoreTotal: number }>({
       action: 'submitQCM',
       access_code,
       chapter_id,
@@ -91,7 +84,7 @@ export const api = {
   },
 
   getRedactions(chapter_id?: string) {
-    return gasPost<{ questions: RedactionQuestion[] }>({ action: 'getRedactions', chapter_id })
+    return gasCall<{ questions: RedactionQuestion[] }>({ action: 'getRedactions', chapter_id })
   },
 
   submitRedaction(payload: {
@@ -102,13 +95,15 @@ export const api = {
     image_mime?: string
     chapter_id?: string
   }) {
-    return gasPost<{ success: boolean; note: number; feedback: string; imageUrl: string | null }>({
+    // image_base64 exclu — trop volumineux pour un paramètre GET
+    const { image_base64: _img, image_mime: _mime, ...rest } = payload
+    return gasCall<{ success: boolean; note: number; feedback: string; imageUrl: string | null }>({
       action: 'submitRedaction',
-      ...payload,
+      ...rest,
     })
   },
 
   getScores(access_code: string) {
-    return gasPost<ScoresResponse>({ action: 'getScores', access_code })
+    return gasCall<ScoresResponse>({ action: 'getScores', access_code })
   },
 }
