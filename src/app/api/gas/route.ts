@@ -7,14 +7,33 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'GAS_URL non configurée côté serveur' }, { status: 500 })
   }
 
-  const payload = await req.json()
-  const params = new URLSearchParams({ payload: JSON.stringify(payload) })
+  try {
+    const payload = await req.json()
+    const params = new URLSearchParams({ payload: JSON.stringify(payload) })
 
-  const response = await fetch(`${GAS_URL}?${params}`)
-  if (!response.ok) {
-    return NextResponse.json({ error: `Erreur GAS : ${response.status}` }, { status: 502 })
+    const response = await fetch(`${GAS_URL}?${params}`)
+    const text = await response.text()
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: `Erreur GAS ${response.status}: ${text.slice(0, 300)}` },
+        { status: 502 }
+      )
+    }
+
+    try {
+      const data = JSON.parse(text)
+      return NextResponse.json(data)
+    } catch {
+      return NextResponse.json(
+        { error: `Réponse GAS non-JSON: ${text.slice(0, 300)}` },
+        { status: 502 }
+      )
+    }
+  } catch (err) {
+    return NextResponse.json(
+      { error: `Erreur proxy: ${err instanceof Error ? err.message : String(err)}` },
+      { status: 500 }
+    )
   }
-
-  const data = await response.json()
-  return NextResponse.json(data)
 }
