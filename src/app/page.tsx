@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
+
 import { api } from '@/lib/gas'
 import { setSession } from '@/lib/session'
 
@@ -43,13 +43,13 @@ export default function LoginPage() {
         {/* Logo + titre */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-[#13131a] border border-[#252535] shadow-lg mb-5 overflow-hidden">
-            <Image
-              src="/1.png"
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/1.png`}
               alt="Logo établissement"
               width={72}
               height={72}
               className="object-contain"
-              unoptimized
             />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-[#e5e3f0] mb-1">
