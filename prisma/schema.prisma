@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Student {
+  id              Int             @id @default(autoincrement())
+  studentCode     String          @unique
+  password        String
+  firstName       String?
+  lastName        String?
+  profileComplete Boolean         @default(false)
+  createdAt       DateTime        @default(now())
+  scores          Score[]
+  redactions      Redaction[]
+  studentAnswers  StudentAnswer[]
+}
+
+model Chapter {
+  id                 Int                 @id @default(autoincrement())
+  number             Int                 @unique
+  title              String
+  description        String?
+  mcqs               MCQ[]
+  scores             Score[]
+  redactionQuestions RedactionQuestion[]
+}
+
+model MCQ {
+  id             Int             @id @default(autoincrement())
+  chapterId      Int
+  notion         String
+  question       String
+  options        String
+  correctAnswer  Int
+  explanation    String?
+  chapter        Chapter         @relation(fields: [chapterId], references: [id])
+  studentAnswers StudentAnswer[]
+}
+
+model StudentAnswer {
+  id         Int      @id @default(autoincrement())
+  studentId  Int
+  mcqId      Int
+  answer     Int
+  isCorrect  Boolean
+  answeredAt DateTime @default(now())
+  student    Student  @relation(fields: [studentId], references: [id])
+  mcq        MCQ      @relation(fields: [mcqId], references: [id])
+
+  @@unique([studentId, mcqId])
+}
+
+model RedactionQuestion {
+  id          Int         @id @default(autoincrement())
+  chapterId   Int
+  title       String
+  context     String?
+  question    String
+  gradingGrid String
+  maxScore    Float       @default(20)
+  chapter     Chapter     @relation(fields: [chapterId], references: [id])
+  redactions  Redaction[]
+}
+
+model Redaction {
+  id            Int               @id @default(autoincrement())
+  studentId     Int
+  questionId    Int
+  studentAnswer String
+  feedback      String?
+  score         Float?
+  createdAt     DateTime          @default(now())
+  student       Student           @relation(fields: [studentId], references: [id])
+  question      RedactionQuestion @relation(fields: [questionId], references: [id])
+}
+
+model Score {
+  id        Int      @id @default(autoincrement())
+  studentId Int
+  chapterId Int
+  correct   Int      @default(0)
+  total     Int      @default(0)
+  updatedAt DateTime @updatedAt
+  student   Student  @relation(fields: [studentId], references: [id])
+  chapter   Chapter  @relation(fields: [chapterId], references: [id])
+
+  @@unique([studentId, chapterId])
+}
