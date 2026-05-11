@@ -26,7 +26,7 @@ export default function Header({ prenom, nom, scoreTotal }: Props) {
         <Link href="/dashboard" className="flex items-center gap-3 group">
           <div className="w-8 h-8 rounded-lg bg-[#13131a] border border-[#252535] overflow-hidden flex-shrink-0 group-hover:border-[#c9a84c]/40 transition-colors">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/1.png`} alt="Logo" width={32} height={32} className="object-contain" />
+            <img src="/1.png" alt="Logo" width={32} height={32} className="object-contain" />
           </div>
           <span className="text-sm font-semibold text-[#e5e3f0] hidden sm:block">
             Réviser SIG avec <span className="text-[#c9a84c]">MMOK</span>

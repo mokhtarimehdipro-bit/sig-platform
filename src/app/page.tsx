@@ -45,7 +45,7 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-[#13131a] border border-[#252535] shadow-lg mb-5 overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/1.png`}
+              src="/1.png"
               alt="Logo établissement"
               width={72}
               height={72}

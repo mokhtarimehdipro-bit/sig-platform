@@ -1,41 +1,3 @@
-const GAS_URL = process.env.NEXT_PUBLIC_GAS_URL || ''
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-function gasCall<T>(payload: object): Promise<T> {
-  if (!GAS_URL) return Promise.reject(new Error('NEXT_PUBLIC_GAS_URL non définie'))
-
-  return new Promise<T>((resolve, reject) => {
-    const cbName = `_gas_${Date.now()}_${Math.random().toString(36).slice(2)}`
-    const script = document.createElement('script')
-    const w = window as any
-
-    const cleanup = () => {
-      delete w[cbName]
-      if (script.parentNode) script.parentNode.removeChild(script)
-    }
-
-    w[cbName] = (data: any) => {
-      cleanup()
-      if (data && data.error) reject(new Error(data.error))
-      else resolve(data as T)
-    }
-
-    const params = new URLSearchParams({
-      payload: JSON.stringify(payload),
-      callback: cbName,
-    })
-
-    script.src = `${GAS_URL}?${params.toString()}`
-    script.onerror = () => {
-      cleanup()
-      reject(new Error('Impossible de contacter le serveur'))
-    }
-
-    document.head.appendChild(script)
-  })
-}
-/* eslint-enable @typescript-eslint/no-explicit-any */
-
 // — Types —
 
 export interface Session {
@@ -87,6 +49,18 @@ export interface ScoresResponse {
 
 // — API —
 
+async function gasCall<T>(payload: object): Promise<T> {
+  const response = await fetch('/api/gas', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+
+  const data = await response.json()
+  if (data.error) throw new Error(data.error)
+  return data as T
+}
+
 export const api = {
   login(access_code: string, mdp: string) {
     return gasCall<Session & { success: boolean }>({ action: 'login', access_code, mdp })
@@ -121,11 +95,9 @@ export const api = {
     image_mime?: string
     chapter_id?: string
   }) {
-    const { image_base64: _img, image_mime: _mime, ...rest } = payload
-    void _img; void _mime
     return gasCall<{ success: boolean; note: number; feedback: string; imageUrl: string | null }>({
       action: 'submitRedaction',
-      ...rest,
+      ...payload,
     })
   },
 
