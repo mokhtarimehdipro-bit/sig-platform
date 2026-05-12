@@ -14,19 +14,27 @@ interface Props {
 
 type Phase = 'quiz' | 'saving' | 'results'
 
+function calcScore(answers: (number | null)[], questions: QCMQuestion[]) {
+  const correct = answers.filter((a, i) => a !== null && a !== -1 && a === questions[i].correct_answer).length
+  const wrong   = answers.filter((a, i) => a !== null && a !== -1 && a !== questions[i].correct_answer).length
+  const skipped = answers.filter(a => a === -1 || a === null).length
+  const pct = Math.max(0, Math.round((correct - wrong * 0.5) / questions.length * 100))
+  return { correct, wrong, skipped, pct }
+}
+
 export default function MCQEngine({ chapter, questions, accessCode, onBack }: Props) {
-  const [index, setIndex] = useState(0)
+  const [index, setIndex]     = useState(0)
   const [selected, setSelected] = useState<number | null>(null)
   const [answers, setAnswers] = useState<(number | null)[]>(new Array(questions.length).fill(null))
-  const [phase, setPhase] = useState<Phase>('quiz')
+  const [phase, setPhase]     = useState<Phase>('quiz')
   const [saveError, setSaveError] = useState('')
   const [ficheData, setFicheData] = useState<Fiche | null>(null)
   const [ficheLoading, setFicheLoading] = useState(false)
   const [ficheOpen, setFicheOpen] = useState(false)
 
-  const current = questions[index]
+  const current    = questions[index]
   const isAnswered = selected !== null
-  const progress = Math.round(((index + 1) / questions.length) * 100)
+  const progress   = Math.round(((index + 1) / questions.length) * 100)
 
   const handleSelect = (idx: number) => {
     if (isAnswered) return
@@ -36,21 +44,36 @@ export default function MCQEngine({ chapter, questions, accessCode, onBack }: Pr
     setAnswers(updated)
   }
 
+  const finishQuiz = async (finalAnswers: (number | null)[]) => {
+    setPhase('saving')
+    setSaveError('')
+    const { pct } = calcScore(finalAnswers, questions)
+    try {
+      await api.submitQCM(accessCode, chapter.chapter_id, pct)
+    } catch (e: unknown) {
+      setSaveError(e instanceof Error ? e.message : 'Erreur lors de la sauvegarde')
+    }
+    setPhase('results')
+  }
+
   const handleNext = async () => {
     if (index < questions.length - 1) {
       setIndex(index + 1)
       setSelected(null)
     } else {
-      setPhase('saving')
-      setSaveError('')
-      const correct = answers.filter((a, i) => a === questions[i].correct_answer).length
-      const score = Math.round((correct / questions.length) * 100)
-      try {
-        await api.submitQCM(accessCode, chapter.chapter_id, score)
-      } catch (e: unknown) {
-        setSaveError(e instanceof Error ? e.message : 'Erreur lors de la sauvegarde')
-      }
-      setPhase('results')
+      await finishQuiz(answers)
+    }
+  }
+
+  const handleSkip = async () => {
+    const updated = [...answers]
+    updated[index] = -1
+    setAnswers(updated)
+    if (index < questions.length - 1) {
+      setIndex(index + 1)
+      setSelected(null)
+    } else {
+      await finishQuiz(updated)
     }
   }
 
@@ -76,11 +99,10 @@ export default function MCQEngine({ chapter, questions, accessCode, onBack }: Pr
 
   // ── RÉSULTATS ──
   if (phase === 'results' || (phase === 'saving' && index === questions.length - 1)) {
-    const correct = answers.filter((a, i) => a === questions[i].correct_answer).length
-    const pct = Math.round((correct / questions.length) * 100)
+    const { correct, wrong, skipped, pct } = calcScore(answers, questions)
     const scoreColor = pct >= 70 ? 'text-emerald-400' : pct >= 50 ? 'text-amber-400' : 'text-red-400'
-    const scoreBg = pct >= 70 ? 'bg-emerald-500/10 border-emerald-500/20' : pct >= 50 ? 'bg-amber-500/10 border-amber-500/20' : 'bg-red-500/10 border-red-500/20'
-    const label = pct >= 70 ? 'Acquis' : pct >= 50 ? 'Partiellement acquis' : 'Non acquis — à réviser'
+    const scoreBg    = pct >= 70 ? 'bg-emerald-500/10 border-emerald-500/20' : pct >= 50 ? 'bg-amber-500/10 border-amber-500/20' : 'bg-red-500/10 border-red-500/20'
+    const label      = pct >= 70 ? 'Acquis' : pct >= 50 ? 'Partiellement acquis' : 'Non acquis — à réviser'
 
     return (
       <div className="space-y-5 animate-fade-in">
@@ -93,10 +115,23 @@ export default function MCQEngine({ chapter, questions, accessCode, onBack }: Pr
           )}
           <p className="text-xs text-[#7a7891] uppercase tracking-widest mb-2">{chapter.titre}</p>
           <p className={`text-5xl font-bold ${scoreColor}`}>{pct}<span className="text-2xl text-[#4a4860]">%</span></p>
-          <p className="text-[#7a7891] text-sm mt-1">{correct}/{questions.length} bonnes réponses</p>
+
+          {/* Détail points */}
+          <div className="flex justify-center gap-4 mt-3 text-xs">
+            <span className="text-emerald-400">{correct} correcte{correct > 1 ? 's' : ''} <span className="text-[#4a4860]">(+{correct} pt{correct > 1 ? 's' : ''})</span></span>
+            <span className="text-red-400">{wrong} incorrecte{wrong > 1 ? 's' : ''} <span className="text-[#4a4860]">(-{(wrong * 0.5).toFixed(1).replace('.0','')} pt{wrong > 1 ? 's' : ''})</span></span>
+            {skipped > 0 && <span className="text-[#7a7891]">{skipped} passée{skipped > 1 ? 's' : ''} <span className="text-[#4a4860]">(0 pt)</span></span>}
+          </div>
+
           <span className={`inline-block mt-3 text-xs font-semibold px-3 py-1 rounded-full ${scoreColor} ${scoreBg} border`}>
             {label}
           </span>
+
+          {/* Barème */}
+          <p className="text-[10px] text-[#4a4860] mt-3">
+            Barème · +1 pt / correcte · −0,5 pt / incorrecte · 0 pt / passée
+          </p>
+
           {saveError && <p className="text-red-400 text-xs mt-3">⚠ {saveError}</p>}
         </div>
 
@@ -132,21 +167,31 @@ export default function MCQEngine({ chapter, questions, accessCode, onBack }: Pr
         {/* Correction détaillée */}
         <div className="space-y-3">
           {questions.map((q, i) => {
-            const ua = answers[i]
-            const ok = ua === q.correct_answer
+            const ua      = answers[i]
+            const skippedQ = ua === -1 || ua === null
+            const ok      = !skippedQ && ua === q.correct_answer
             return (
-              <div key={q.qcm_id} className={`card p-5 border ${ok ? 'border-emerald-500/20' : 'border-red-500/20'}`}>
+              <div key={q.qcm_id} className={`card p-5 border ${
+                skippedQ ? 'border-[#252535]' : ok ? 'border-emerald-500/20' : 'border-red-500/20'
+              }`}>
                 <div className="flex items-start gap-3">
-                  <span className="text-base mt-0.5 flex-shrink-0">{ok ? '✓' : '✗'}</span>
+                  <span className="text-base mt-0.5 flex-shrink-0">
+                    {skippedQ ? '—' : ok ? '✓' : '✗'}
+                  </span>
                   <div className="flex-1">
-                    {q.notion && <p className="text-xs text-[#7a7891] mb-1 uppercase tracking-wide">{q.notion}</p>}
+                    <div className="flex items-center gap-2 mb-1">
+                      {q.notion && <p className="text-xs text-[#7a7891] uppercase tracking-wide">{q.notion}</p>}
+                      {skippedQ && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#252535] text-[#7a7891] font-semibold uppercase">Passée</span>
+                      )}
+                    </div>
                     <p className="text-sm font-medium text-[#e5e3f0] mb-3">{q.question}</p>
                     <div className="space-y-1.5">
                       {q.options.map((opt, idx) => (
                         <div key={idx} className={`px-3 py-2 rounded-lg text-sm ${
                           idx === q.correct_answer
                             ? 'bg-emerald-500/10 text-emerald-300 font-medium'
-                            : idx === ua && !ok
+                            : !skippedQ && idx === ua && !ok
                             ? 'bg-red-500/10 text-red-400'
                             : 'text-[#4a4860]'
                         }`}>
@@ -229,12 +274,17 @@ export default function MCQEngine({ chapter, questions, accessCode, onBack }: Pr
         )}
       </div>
 
-      {isAnswered && (
-        <button
-          onClick={handleNext}
-          className="btn-gold w-full py-3 text-sm"
-        >
+      {/* Actions */}
+      {isAnswered ? (
+        <button onClick={handleNext} className="btn-gold w-full py-3 text-sm">
           {index < questions.length - 1 ? 'Question suivante →' : 'Voir les résultats →'}
+        </button>
+      ) : (
+        <button
+          onClick={handleSkip}
+          className="w-full py-2.5 text-xs text-[#4a4860] hover:text-[#7a7891] transition-colors border border-[#1a1a1a] rounded-xl hover:border-[#252535]"
+        >
+          Passer sans répondre (0 pt)
         </button>
       )}
     </div>
