@@ -38,6 +38,7 @@ export default function Header({ prenom, nom, scoreTotal }: Props) {
           <NavLink href="/dashboard" label="Dashboard" />
           <NavLink href="/qcm" label="QCM" />
           <NavLink href="/redaction" label="Rédaction" />
+          <NavLink href="/fiches" label="Fiches" />
         </nav>
 
         {/* Profil + score */}

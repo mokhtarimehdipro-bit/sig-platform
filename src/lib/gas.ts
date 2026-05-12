@@ -47,6 +47,17 @@ export interface ScoresResponse {
   chapters: Chapter[]
 }
 
+export interface Fiche {
+  fiche_id: string
+  chapter_id: string
+  fiche_type: 'qcm' | 'redaction'
+  titre_court: string
+  notions_cles: string[]
+  formules: string[]
+  a_retenir: string
+  piege_examen: string
+}
+
 // — API —
 
 async function gasCall<T>(payload: object): Promise<T> {
@@ -103,5 +114,9 @@ export const api = {
 
   getScores(access_code: string) {
     return gasCall<ScoresResponse>({ action: 'getScores', access_code })
+  },
+
+  getFiches(chapter_id?: string, fiche_type?: 'qcm' | 'redaction') {
+    return gasCall<{ fiches: Fiche[] }>({ action: 'getFiches', chapter_id, fiche_type })
   },
 }

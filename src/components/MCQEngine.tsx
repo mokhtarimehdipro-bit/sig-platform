@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { api, type Chapter, type QCMQuestion } from '@/lib/gas'
+import { api, type Chapter, type QCMQuestion, type Fiche } from '@/lib/gas'
+import FicheCard from '@/components/FicheCard'
 
 interface Props {
   chapter: Chapter
@@ -19,6 +20,9 @@ export default function MCQEngine({ chapter, questions, accessCode, onBack }: Pr
   const [answers, setAnswers] = useState<(number | null)[]>(new Array(questions.length).fill(null))
   const [phase, setPhase] = useState<Phase>('quiz')
   const [saveError, setSaveError] = useState('')
+  const [ficheData, setFicheData] = useState<Fiche | null>(null)
+  const [ficheLoading, setFicheLoading] = useState(false)
+  const [ficheOpen, setFicheOpen] = useState(false)
 
   const current = questions[index]
   const isAnswered = selected !== null
@@ -56,6 +60,18 @@ export default function MCQEngine({ chapter, questions, accessCode, onBack }: Pr
     setSelected(null)
     setPhase('quiz')
     setSaveError('')
+    setFicheOpen(false)
+  }
+
+  const handleToggleFiche = () => {
+    if (!ficheData && !ficheLoading) {
+      setFicheLoading(true)
+      api.getFiches(chapter.chapter_id)
+        .then(d => setFicheData(d.fiches[0] ?? null))
+        .catch(() => {})
+        .finally(() => setFicheLoading(false))
+    }
+    setFicheOpen(v => !v)
   }
 
   // ── RÉSULTATS ──
@@ -82,6 +98,35 @@ export default function MCQEngine({ chapter, questions, accessCode, onBack }: Pr
             {label}
           </span>
           {saveError && <p className="text-red-400 text-xs mt-3">⚠ {saveError}</p>}
+        </div>
+
+        {/* Fiche résumé du chapitre */}
+        <div className="card overflow-hidden">
+          <button
+            className="w-full flex items-center justify-between px-5 py-4 text-sm font-medium text-[#e5e3f0] hover:bg-[#13131a] transition-colors"
+            onClick={handleToggleFiche}
+          >
+            <span className="flex items-center gap-2 text-[#c9a84c]">
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span>Fiche résumé du chapitre</span>
+            </span>
+            <span className={`text-[#7a7891] text-xs transition-transform duration-200 ${ficheOpen ? 'rotate-180' : ''}`}>▼</span>
+          </button>
+          {ficheOpen && (
+            <div className="border-t border-[#252535]">
+              {ficheLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="w-5 h-5 border-2 border-[#c9a84c]/30 border-t-[#c9a84c] rounded-full animate-spin" />
+                </div>
+              ) : ficheData ? (
+                <FicheCard fiche={ficheData} />
+              ) : (
+                <p className="text-center text-[#4a4860] text-sm py-6">Fiche non disponible pour ce chapitre</p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Correction détaillée */}

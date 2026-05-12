@@ -97,7 +97,7 @@ export default function RedactionPage() {
           <>
             <div className="mb-6">
               <h1 className="text-xl font-bold text-[#e5e3f0]">Simulateur Rédactionnel</h1>
-              <p className="text-[#7a7891] text-sm mt-1">Choisissez un chapitre pour accéder aux sujets de rédaction avec correction IA</p>
+              <p className="text-[#7a7891] text-sm mt-1">Choisissez un chapitre pour accéder aux sujets de rédaction avec correction MMOK</p>
             </div>
             <div className="space-y-2">
               {chapters.length === 0 && !fetchError && (

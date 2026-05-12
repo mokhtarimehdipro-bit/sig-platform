@@ -97,7 +97,7 @@ export default function RedactionModule({ question, accessCode, onBack }: Props)
       <div className="card p-6">
         <div className="flex items-center justify-between mb-4">
           <button onClick={onBack} className="text-xs text-[#7a7891] hover:text-[#c9a84c] transition-colors">← Retour</button>
-          <span className="badge-gold">Rédaction IA</span>
+          <span className="badge-gold">Rédaction MMOK</span>
         </div>
 
         {question.mise_en_situation && (
@@ -181,9 +181,9 @@ export default function RedactionModule({ question, accessCode, onBack }: Props)
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                   </svg>
-                  Correction Gemini en cours…
+                  Correction MMOK en cours…
                 </span>
-              ) : 'Soumettre pour correction IA →'}
+              ) : 'Soumettre pour correction MMOK →'}
             </button>
           </div>
         </div>
@@ -194,7 +194,7 @@ export default function RedactionModule({ question, accessCode, onBack }: Props)
         <div className="space-y-4 animate-slide-up">
           {/* Note */}
           <div className={`card p-8 text-center border ${noteBg(feedback.note)}`}>
-            <p className="text-xs text-[#7a7891] uppercase tracking-widest mb-3">Note attribuée par Gemini</p>
+            <p className="text-xs text-[#7a7891] uppercase tracking-widest mb-3">Correction MMOK</p>
             <p className={`text-6xl font-bold ${noteColor(feedback.note)}`}>
               {feedback.note}
               <span className="text-2xl text-[#4a4860]">/20</span>

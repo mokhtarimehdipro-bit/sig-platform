@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { getSession, setSession } from '@/lib/session'
-import { api, type ScoresResponse, type Chapter } from '@/lib/gas'
+import { api, type ScoresResponse, type Chapter, type Fiche } from '@/lib/gas'
 import Header from '@/components/Header'
 import ScoreChart from '@/components/ScoreChart'
+import FicheCard from '@/components/FicheCard'
 
 interface ChapterStat {
   chapter_id: string
@@ -22,6 +23,8 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<ChapterStat[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [ficheModal, setFicheModal] = useState<Fiche | null>(null)
+  const [ficheLoadingId, setFicheLoadingId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!session) { router.replace('/'); return }
@@ -49,6 +52,14 @@ export default function DashboardPage() {
       .catch(e => setError(e.message))
       .finally(() => setLoading(false))
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const openFiche = (chapter_id: string) => {
+    setFicheLoadingId(chapter_id)
+    api.getFiches(chapter_id)
+      .then(data => setFicheModal(data.fiches[0] ?? null))
+      .catch(() => setFicheModal(null))
+      .finally(() => setFicheLoadingId(null))
+  }
 
   if (!session) return null
 
@@ -164,6 +175,15 @@ export default function DashboardPage() {
                       </span>
                     </div>
                   )}
+                  <button
+                    onClick={() => openFiche(ch.chapter_id)}
+                    disabled={ficheLoadingId === ch.chapter_id}
+                    className="btn-ghost flex-shrink-0 text-xs px-3 py-1.5 disabled:opacity-50"
+                  >
+                    {ficheLoadingId === ch.chapter_id ? (
+                      <span className="inline-block w-3 h-3 border border-[#c9a84c]/40 border-t-[#c9a84c] rounded-full animate-spin" />
+                    ) : 'Fiche'}
+                  </button>
                   <Link href="/qcm" className="btn-ghost flex-shrink-0 text-xs px-3 py-1.5">
                     {ch.score !== null ? 'Refaire' : 'Démarrer'}
                   </Link>
@@ -178,6 +198,27 @@ export default function DashboardPage() {
           )}
         </div>
       </main>
+
+      {/* Modale Fiche */}
+      {(ficheModal || ficheLoadingId) && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in"
+          onClick={() => setFicheModal(null)}
+        >
+          <div
+            className="w-full max-w-lg max-h-[90vh] overflow-y-auto"
+            onClick={e => e.stopPropagation()}
+          >
+            {ficheModal ? (
+              <FicheCard fiche={ficheModal} onClose={() => setFicheModal(null)} />
+            ) : (
+              <div className="card p-8 flex justify-center">
+                <div className="w-6 h-6 border-2 border-[#c9a84c]/30 border-t-[#c9a84c] rounded-full animate-spin" />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
