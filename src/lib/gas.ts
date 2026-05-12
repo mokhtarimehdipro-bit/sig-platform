@@ -19,6 +19,7 @@ export interface QCMQuestion {
   options: [string, string, string, string]
   correct_answer: number
   explication: string
+  difficulte: number
 }
 
 export interface RedactionQuestion {

@@ -14,11 +14,20 @@ interface Props {
 
 type Phase = 'quiz' | 'saving' | 'results'
 
+function weight(q: QCMQuestion) { return q.difficulte === 3 ? 2 : q.difficulte === 2 ? 1.5 : 1 }
+
 function calcScore(answers: (number | null)[], questions: QCMQuestion[]) {
   const correct = answers.filter((a, i) => a !== null && a !== -1 && a === questions[i].correct_answer).length
   const wrong   = answers.filter((a, i) => a !== null && a !== -1 && a !== questions[i].correct_answer).length
   const skipped = answers.filter(a => a === -1 || a === null).length
-  const pct = Math.max(0, Math.round((correct - wrong * 0.5) / questions.length * 100))
+  const maxPts  = questions.reduce((s, q) => s + weight(q), 0)
+  let raw = 0
+  answers.forEach((a, i) => {
+    if (a === null || a === -1) return
+    const w = weight(questions[i])
+    if (a === questions[i].correct_answer) raw += w; else raw -= w * 0.5
+  })
+  const pct = Math.max(0, Math.round(raw / maxPts * 100))
   return { correct, wrong, skipped, pct }
 }
 
@@ -179,8 +188,15 @@ export default function MCQEngine({ chapter, questions, accessCode, onBack }: Pr
                     {skippedQ ? '—' : ok ? '✓' : '✗'}
                   </span>
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       {q.notion && <p className="text-xs text-[#7a7891] uppercase tracking-wide">{q.notion}</p>}
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-semibold ${
+                        q.difficulte === 3 ? 'bg-red-500/10 border-red-500/30 text-red-400' :
+                        q.difficulte === 2 ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' :
+                        'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                      }`}>
+                        {q.difficulte === 3 ? '×2' : q.difficulte === 2 ? '×1.5' : '×1'}
+                      </span>
                       {skippedQ && (
                         <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#252535] text-[#7a7891] font-semibold uppercase">Passée</span>
                       )}
@@ -248,9 +264,18 @@ export default function MCQEngine({ chapter, questions, accessCode, onBack }: Pr
 
       {/* Question */}
       <div className="card p-6">
-        {current.notion && (
-          <span className="inline-block badge-gold mb-3">{current.notion}</span>
-        )}
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
+          {current.notion && (
+            <span className="inline-block badge-gold">{current.notion}</span>
+          )}
+          <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+            current.difficulte === 3 ? 'bg-red-500/10 border-red-500/30 text-red-400' :
+            current.difficulte === 2 ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' :
+            'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+          }`}>
+            {current.difficulte === 3 ? 'Difficile ×2' : current.difficulte === 2 ? 'Moyen ×1.5' : 'Facile ×1'}
+          </span>
+        </div>
         <p className="text-[#e5e3f0] font-medium leading-relaxed mb-6 text-sm">{current.question}</p>
 
         <div className="space-y-2.5">
