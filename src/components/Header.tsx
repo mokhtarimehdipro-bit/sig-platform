@@ -54,7 +54,7 @@ export default function Header({ prenom, nom, scoreTotal }: Props) {
               onClick={handleLogout}
               className="text-xs text-[#7a7891] hover:text-red-400 transition-colors px-2 py-1 rounded-lg hover:bg-red-500/10"
             >
-              Déco
+              Déconnexion
             </button>
           </div>
         )}
