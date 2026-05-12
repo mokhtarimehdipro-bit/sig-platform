@@ -5,6 +5,7 @@ interface SchemaProps { chapter_id: string; fiche_type: 'qcm' | 'redaction' }
 export default function ChapterSchema({ chapter_id, fiche_type }: SchemaProps) {
   if (fiche_type === 'redaction') return null
   switch (chapter_id) {
+    case 'CH01': return <SchemaSI />
     case 'CH03': return <SchemaSER />
     case 'CH05': return <SchemaRelationnel />
     case 'CH06': return <SchemaSQL />
@@ -14,58 +15,144 @@ export default function ChapterSchema({ chapter_id, fiche_type }: SchemaProps) {
   }
 }
 
+// ── CH01 · Structure du SI ───────────────────────────────────────────────────
+
+function SchemaSI() {
+  return (
+    <div className="px-5 pb-5">
+      <p className="text-[10px] font-bold text-[#7a7891] uppercase tracking-widest mb-4">
+        Structure et niveaux du SI
+      </p>
+      <div className="space-y-4 text-[10px]">
+
+        {/* 4 fonctions */}
+        <div>
+          <p className="text-[9px] text-[#7a7891] font-semibold uppercase tracking-wider mb-2">4 fonctions officielles (BO)</p>
+          <div className="flex items-center gap-1">
+            {[
+              { label: 'Collecter', color: 'bg-[#1e3a5f] border-[#3b82f6]/50 text-[#60a5fa]' },
+              { label: 'Stocker',   color: 'bg-[#052e16] border-[#34d399]/50 text-[#34d399]' },
+              { label: 'Traiter',   color: 'bg-[#2d1b4e] border-[#a855f7]/50 text-[#a855f7]' },
+              { label: 'Diffuser',  color: 'bg-[#2d1505] border-[#f97316]/50 text-[#f97316]' },
+            ].map((fn, i) => (
+              <div key={fn.label} className="flex items-center gap-0.5 flex-1 min-w-0">
+                <div className={`flex-1 px-1 py-2 rounded-lg border text-center font-bold text-[8px] leading-tight ${fn.color}`}>
+                  {fn.label}
+                </div>
+                {i < 3 && <span className="text-[#4a4860] text-[10px]">›</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 3 composantes */}
+        <div>
+          <p className="text-[9px] text-[#7a7891] font-semibold uppercase tracking-wider mb-2">3 composantes du SI</p>
+          <div className="space-y-1.5">
+            {[
+              { label: 'Humaine',           desc: 'Utilisateurs · DSI · Informaticiens · Décideurs',         color: 'bg-[#1e3a5f] border-[#3b82f6]/40 text-[#60a5fa]' },
+              { label: 'Organisationnelle', desc: 'Procédures · Règles de gestion · Modes opératoires',      color: 'bg-[#2d1b4e] border-[#a855f7]/40 text-[#a855f7]' },
+              { label: 'Technologique',     desc: 'Matériels · Logiciels · Réseaux · SGBD',                  color: 'bg-[#052e16] border-[#34d399]/40 text-[#34d399]' },
+            ].map(c => (
+              <div key={c.label} className={`flex items-center gap-3 px-3 py-2 rounded-lg border ${c.color}`}>
+                <span className="font-bold flex-shrink-0 text-[9px]">{c.label}</span>
+                <span className="text-[#7a7891] text-[8.5px]">{c.desc}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-[8.5px] text-[#4a4860] mt-1.5 text-center">
+            SI ⊃ Système informatique — la composante techno n&apos;est qu&apos;une partie du SI
+          </p>
+        </div>
+
+        {/* Niveaux décisionnels */}
+        <div>
+          <p className="text-[9px] text-[#7a7891] font-semibold uppercase tracking-wider mb-2">Niveaux décisionnels (pyramide DSI)</p>
+          <div className="space-y-1">
+            {[
+              { label: 'Stratégique', desc: 'PDG · Long terme · KPI · Tableaux de bord', color: 'border-amber-500/40 bg-amber-500/10 text-[#c9a84c]', mx: 'mx-8' },
+              { label: 'Tactique',    desc: 'Directeurs · Moyen terme · Reporting',       color: 'border-[#a855f7]/40 bg-[#2d1b4e] text-[#a855f7]',   mx: 'mx-4' },
+              { label: 'Opérationnel',desc: 'Managers · Court terme · Transactions',      color: 'border-[#3b82f6]/40 bg-[#1e3a5f] text-[#60a5fa]',   mx: 'mx-0' },
+            ].map(n => (
+              <div key={n.label} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${n.color} ${n.mx}`}>
+                <span className="font-bold text-[8.5px] flex-shrink-0">{n.label}</span>
+                <span className="text-[#7a7891] text-[8px]">{n.desc}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  )
+}
+
 // ── CH03 · Schéma Événement-Résultat ────────────────────────────────────────
 
 function SchemaSER() {
   return (
     <div className="px-5 pb-5">
       <p className="text-[10px] font-bold text-[#7a7891] uppercase tracking-widest mb-3">
-        Schéma Événement-Résultat (SER) — Structure type
+        Schéma Événement-Résultat — Formalisme Merise
       </p>
-      <svg viewBox="0 0 300 330" className="w-full max-w-xs mx-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Événement déclencheur */}
-        <rect x="75" y="8" width="150" height="42" rx="21" stroke="#60a5fa" strokeWidth="1.5" fill="#1e3a5f"/>
-        <text x="150" y="24" textAnchor="middle" fill="#60a5fa" fontSize="8" fontFamily="sans-serif" fontWeight="bold">ÉVÉNEMENT DÉCLENCHEUR</text>
-        <text x="150" y="39" textAnchor="middle" fill="#bfdbfe" fontSize="9" fontFamily="sans-serif">Commande client reçue</text>
-
-        {/* Flèche */}
-        <line x1="150" y1="50" x2="150" y2="76" stroke="#4a4860" strokeWidth="1.5"/>
-        <polygon points="144,73 150,83 156,73" fill="#4a4860"/>
-
-        {/* Label acteur */}
-        <text x="158" y="66" fill="#7a7891" fontSize="8" fontFamily="sans-serif" fontStyle="italic">Service Commercial</text>
-
-        {/* Activité */}
-        <rect x="45" y="83" width="210" height="46" rx="7" fill="#1a1a25" stroke="#3b82f6" strokeWidth="1.5"/>
-        <text x="150" y="101" textAnchor="middle" fill="#60a5fa" fontSize="8" fontFamily="sans-serif" fontWeight="bold">ACTIVITÉ</text>
-        <text x="150" y="118" textAnchor="middle" fill="#e5e3f0" fontSize="10" fontFamily="sans-serif">Traitement de la commande</text>
-
-        {/* Flèche */}
-        <line x1="150" y1="129" x2="150" y2="153" stroke="#4a4860" strokeWidth="1.5"/>
-        <polygon points="144,150 150,160 156,150" fill="#4a4860"/>
-
-        {/* Synchronisation OU */}
-        <polygon points="150,160 190,184 150,208 110,184" fill="#2d2410" stroke="#c9a84c" strokeWidth="1.5"/>
-        <text x="150" y="188" textAnchor="middle" fill="#c9a84c" fontSize="11" fontFamily="sans-serif" fontWeight="bold">OU</text>
-
-        {/* Flèches vers résultats */}
-        <line x1="110" y1="208" x2="70" y2="248" stroke="#4a4860" strokeWidth="1.5"/>
-        <line x1="190" y1="208" x2="230" y2="248" stroke="#4a4860" strokeWidth="1.5"/>
-
-        {/* Résultat 1 — Acceptée */}
-        <rect x="10" y="248" width="120" height="42" rx="7" fill="#052e16" stroke="#34d399" strokeWidth="1.5"/>
-        <text x="70" y="265" textAnchor="middle" fill="#34d399" fontSize="8" fontFamily="sans-serif" fontWeight="bold">RÉSULTAT 1</text>
-        <text x="70" y="280" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontFamily="sans-serif">Commande acceptée</text>
-
-        {/* Résultat 2 — Refusée */}
-        <rect x="170" y="248" width="120" height="42" rx="7" fill="#2d0707" stroke="#f87171" strokeWidth="1.5"/>
-        <text x="230" y="265" textAnchor="middle" fill="#f87171" fontSize="8" fontFamily="sans-serif" fontWeight="bold">RÉSULTAT 2</text>
-        <text x="230" y="280" textAnchor="middle" fill="#fca5a5" fontSize="9" fontFamily="sans-serif">Stock insuffisant</text>
-
-        {/* Légende */}
-        <text x="150" y="318" textAnchor="middle" fill="#4a4860" fontSize="8" fontFamily="sans-serif">
-          ET = les deux événements requis · OU = l&apos;un ou l&apos;autre
-        </text>
+      {/* Légende des formes */}
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[9px] text-[#7a7891] mb-3">
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-7 h-3 rounded-full border border-dashed border-[#60a5fa] bg-[#0d1b2e]"/>
+          Événement
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-7 h-3 border border-[#3b82f6] bg-[#1a1a25] rounded-sm"/>
+          Activité
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-3 h-3 rotate-45 border border-[#c9a84c] bg-[#2d2410]"/>
+          ET / OU
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-7 h-3 rounded-full border border-[#34d399] bg-[#052e16]"/>
+          Résultat
+        </span>
+      </div>
+      <svg viewBox="0 0 300 310" className="w-full max-w-xs mx-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Acteur */}
+        <text x="150" y="11" textAnchor="middle" fill="#7a7891" fontSize="7.5" fontFamily="sans-serif" fontStyle="italic">Service Commercial</text>
+        {/* Événement — ovale pointillé (forme officielle) */}
+        <ellipse cx="150" cy="30" rx="108" ry="17" stroke="#60a5fa" strokeWidth="1.5" strokeDasharray="4,3" fill="#0d1b2e"/>
+        <text x="150" y="34" textAnchor="middle" fill="#93c5fd" fontSize="9" fontFamily="sans-serif">Commande client reçue</text>
+        {/* ↓ */}
+        <line x1="150" y1="47" x2="150" y2="65" stroke="#4a4860" strokeWidth="1.5"/>
+        <polygon points="145,62 150,69 155,62" fill="#4a4860"/>
+        {/* Activité — rectangle (forme officielle) */}
+        <rect x="28" y="69" width="244" height="44" rx="3" fill="#1a1a25" stroke="#3b82f6" strokeWidth="1.5"/>
+        <text x="150" y="86" textAnchor="middle" fill="#60a5fa" fontSize="7.5" fontFamily="sans-serif" fontWeight="bold">ACTIVITÉ — Svc Commercial</text>
+        <text x="150" y="103" textAnchor="middle" fill="#e5e3f0" fontSize="9.5" fontFamily="sans-serif">Traitement de la commande</text>
+        {/* ↓ */}
+        <line x1="150" y1="113" x2="150" y2="131" stroke="#4a4860" strokeWidth="1.5"/>
+        <polygon points="145,128 150,135 155,128" fill="#4a4860"/>
+        {/* OU — losange */}
+        <polygon points="150,135 185,154 150,173 115,154" fill="#2d2410" stroke="#c9a84c" strokeWidth="1.5"/>
+        <text x="150" y="158" textAnchor="middle" fill="#c9a84c" fontSize="11" fontFamily="sans-serif" fontWeight="bold">OU</text>
+        {/* Règles d'émission */}
+        <text x="76" y="188" textAnchor="middle" fill="#7a7891" fontSize="7.5" fontFamily="sans-serif" fontStyle="italic">Si stock ok</text>
+        <text x="224" y="188" textAnchor="middle" fill="#7a7891" fontSize="7.5" fontFamily="sans-serif" fontStyle="italic">Si rupture</text>
+        {/* Branches */}
+        <line x1="115" y1="173" x2="73" y2="200" stroke="#4a4860" strokeWidth="1.5"/>
+        <line x1="185" y1="173" x2="227" y2="200" stroke="#4a4860" strokeWidth="1.5"/>
+        {/* Résultat 1 — ovale + barre (forme officielle) */}
+        <ellipse cx="66" cy="217" rx="63" ry="16" stroke="#34d399" strokeWidth="1.5" fill="#052e16"/>
+        <line x1="3" y1="229" x2="129" y2="229" stroke="#34d399" strokeWidth="1.2"/>
+        <text x="66" y="221" textAnchor="middle" fill="#6ee7b7" fontSize="8.5" fontFamily="sans-serif">Bon de préparation</text>
+        {/* Résultat 2 — ovale + barre */}
+        <ellipse cx="234" cy="217" rx="63" ry="16" stroke="#f87171" strokeWidth="1.5" fill="#2d0707"/>
+        <line x1="171" y1="229" x2="297" y2="229" stroke="#f87171" strokeWidth="1.2"/>
+        <text x="234" y="221" textAnchor="middle" fill="#fca5a5" fontSize="8.5" fontFamily="sans-serif">Rupture signalée</text>
+        {/* Séparateur */}
+        <line x1="20" y1="254" x2="280" y2="254" stroke="#252535" strokeWidth="0.5"/>
+        {/* Règles à retenir */}
+        <text x="150" y="268" textAnchor="middle" fill="#4a4860" fontSize="7.5" fontFamily="sans-serif">Résultat = ovale + barre · Événement = ovale pointillé</text>
+        <text x="150" y="281" textAnchor="middle" fill="#4a4860" fontSize="7.5" fontFamily="sans-serif">ET = tous requis · OU = un seul suffit</text>
+        <text x="150" y="294" textAnchor="middle" fill="#4a4860" fontSize="7.5" fontFamily="sans-serif">N1 = acteurs externes seuls · N2 = services internes inclus</text>
       </svg>
     </div>
   )
