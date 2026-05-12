@@ -87,17 +87,86 @@ function SchemaSI() {
   )
 }
 
+// ── CH03 helpers ────────────────────────────────────────────────────────────
+type SerActorKey = 'client' | 'commercial' | 'asst' | 'magasinier' | 'fournisseur'
+const SER_ACTORS: Record<SerActorKey, { badge: string; label: string }> = {
+  client:      { badge: 'bg-blue-500/10 border-blue-500/40 text-blue-400',       label: 'Client' },
+  commercial:  { badge: 'bg-purple-500/10 border-purple-500/40 text-purple-400', label: 'Commercial' },
+  asst:        { badge: 'bg-pink-500/10 border-pink-500/40 text-pink-400',        label: 'Asst. Admin' },
+  magasinier:  { badge: 'bg-teal-500/10 border-teal-500/40 text-teal-400',        label: 'Magasinier' },
+  fournisseur: { badge: 'bg-orange-500/10 border-orange-500/40 text-orange-400',  label: 'Fournisseur' },
+}
+function SerActor({ actor }: { actor: SerActorKey }) {
+  const s = SER_ACTORS[actor]
+  return <span className={`inline-block text-[7px] font-semibold px-1.5 py-0.5 rounded-full border ${s.badge} mb-0.5`}>{s.label}</span>
+}
+function SerArr() {
+  return (
+    <div className="flex justify-center my-0.5">
+      <svg width="8" height="12" viewBox="0 0 8 12" fill="none">
+        <line x1="4" y1="0" x2="4" y2="8" stroke="#4a4860" strokeWidth="1.5"/>
+        <polygon points="0,7 4,12 8,7" fill="#4a4860"/>
+      </svg>
+    </div>
+  )
+}
+function SerEvt({ label, actor, sub }: { label: string; actor?: SerActorKey; sub?: string }) {
+  return (
+    <div className="flex flex-col items-center">
+      {actor && <SerActor actor={actor} />}
+      <div className="border border-dashed border-[#60a5fa] bg-[#0d1b2e] rounded-full px-4 py-1.5 text-center w-full max-w-[210px]">
+        <p className="text-[8.5px] text-[#93c5fd] font-medium leading-tight">{label}</p>
+        {sub && <p className="text-[7px] text-[#4a4860] mt-0.5 italic">{sub}</p>}
+      </div>
+    </div>
+  )
+}
+function SerOp({ label, actor, warn }: { label: string; actor: SerActorKey; warn?: boolean }) {
+  return (
+    <div className="flex flex-col items-center">
+      <SerActor actor={actor} />
+      <div className={`border rounded-lg px-3 py-2 text-center w-full max-w-[210px] ${warn ? 'border-amber-500/50 bg-amber-500/10' : 'border-[#3b82f6]/40 bg-[#1a1a25]'}`}>
+        {warn && <p className="text-[6.5px] text-amber-400 font-bold uppercase tracking-wide mb-0.5">⚠ Étape superflue</p>}
+        <p className={`text-[8.5px] font-medium leading-tight ${warn ? 'text-amber-200' : 'text-[#e5e3f0]'}`}>{label}</p>
+      </div>
+    </div>
+  )
+}
+function SerRes({ label }: { label: string }) {
+  return (
+    <div className="flex flex-col items-center">
+      <div className="border border-[#34d399] bg-[#052e16] rounded-full px-4 py-1.5 text-center w-full max-w-[210px]">
+        <p className="text-[8.5px] text-[#6ee7b7] font-medium leading-tight">{label}</p>
+      </div>
+      <div className="w-[180px] h-px bg-[#34d399]/60 mt-0.5" />
+    </div>
+  )
+}
+function SerDiamond({ label, type }: { label: string; type: 'ET' | 'OU' }) {
+  const isET = type === 'ET'
+  return (
+    <div className="flex justify-center my-1">
+      <div className="relative w-12 h-12">
+        <div className={`absolute inset-0 rotate-45 border-2 ${isET ? 'border-emerald-500 bg-[#0a2e1a]' : 'border-[#c9a84c] bg-[#2d2410]'}`} />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className={`text-[10px] font-bold ${isET ? 'text-emerald-300' : 'text-[#c9a84c]'}`}>{label}</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── CH03 · Schéma Événement-Résultat ────────────────────────────────────────
 
 function SchemaSER() {
   return (
-    <div className="px-5 pb-5 space-y-4">
+    <div className="px-4 pb-5 space-y-4">
 
-      {/* Bloc pédagogique : pourquoi le SER ? */}
+      {/* Pourquoi le SER ? */}
       <div className="bg-[#c9a84c]/5 border border-[#c9a84c]/20 rounded-xl px-4 py-3">
         <p className="text-[9px] font-bold text-[#c9a84c] uppercase tracking-widest mb-1.5">Pourquoi modéliser un processus ?</p>
         <p className="text-[10px] text-[#e5e3f0] leading-relaxed">
-          Le SER rend <span className="text-[#c9a84c] font-semibold">visible ce qui est invisible</span> : délais inutiles, doublons, tâches sans résultat clair. Modéliser = comprendre pour <span className="text-[#c9a84c] font-semibold">optimiser</span>.
+          Le SER rend <span className="text-[#c9a84c] font-semibold">visible ce qui est invisible</span> : délais inutiles, doublons, allers-retours sans valeur ajoutée. Modéliser = comprendre pour <span className="text-[#c9a84c] font-semibold">optimiser</span>.
         </p>
       </div>
 
@@ -106,100 +175,136 @@ function SchemaSER() {
         <p className="text-[9px] font-bold text-[#7a7891] uppercase tracking-widest mb-2">3 types de processus</p>
         <div className="space-y-1.5">
           {[
-            { label: 'Métier (opérationnel)', desc: 'Cœur de l\'activité — vente, achat, production, livraison', color: 'bg-[#1e3a5f] border-[#3b82f6]/40 text-[#60a5fa]' },
-            { label: 'Management (pilotage)', desc: 'Contrôle, reporting, tableaux de bord, décisions stratégiques', color: 'bg-amber-500/10 border-amber-500/30 text-[#c9a84c]' },
-            { label: 'Support (soutien)',      desc: 'RH, comptabilité, informatique — soutiennent les autres', color: 'bg-[#2d1b4e] border-[#a855f7]/40 text-[#a855f7]' },
+            { label: 'Métier (opérationnel)', desc: "Cœur de l'activité — vente, achat, production, livraison", color: 'bg-[#1e3a5f] border-[#3b82f6]/40 text-[#60a5fa]' },
+            { label: 'Management (pilotage)', desc: 'Contrôle, reporting, tableaux de bord, décisions', color: 'bg-amber-500/10 border-amber-500/30 text-[#c9a84c]' },
+            { label: 'Support (soutien)',      desc: "RH, comptabilité, informatique — soutiennent les autres", color: 'bg-[#2d1b4e] border-[#a855f7]/40 text-[#a855f7]' },
           ].map(t => (
             <div key={t.label} className={`flex items-start gap-2 px-3 py-2 rounded-lg border ${t.color}`}>
-              <span className={`font-bold text-[8.5px] flex-shrink-0 mt-0.5`}>{t.label}</span>
+              <span className="font-bold text-[8.5px] flex-shrink-0 mt-0.5">{t.label}</span>
               <span className="text-[#7a7891] text-[8px] leading-relaxed">{t.desc}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* SER — exemple complet */}
+      {/* Règles de formalisme */}
+      <div className="bg-red-500/5 border border-red-500/20 rounded-xl px-4 py-3">
+        <p className="text-[9px] font-bold text-red-400 uppercase tracking-widest mb-2">6 règles de formalisme — à ne jamais oublier</p>
+        <div className="space-y-1">
+          {[
+            '① On commence TOUJOURS par un événement déclencheur',
+            '② On finit TOUJOURS par un résultat (ovale + barre)',
+            '③ Flux de haut en bas — jamais de retour en arrière',
+            "④ Pas d'opération chez les acteurs externes (client, fournisseur)",
+            '⑤ Jamais 2 événements ni 2 opérations consécutifs',
+            '⑥ ET = tous les flux requis · OU = un seul flux suffit',
+          ].map(r => (
+            <p key={r} className="text-[8.5px] text-[#fca5a5]">{r}</p>
+          ))}
+        </div>
+      </div>
+
+      {/* SER — Diagramme */}
       <div>
-        <p className="text-[9px] font-bold text-[#7a7891] uppercase tracking-widest mb-2">SER — Formalisme Merise (exemple complet)</p>
-        {/* Légende */}
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[9px] text-[#7a7891] mb-3">
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block w-7 h-3 rounded-full border border-dashed border-[#60a5fa] bg-[#0d1b2e]"/>Événement
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block w-7 h-3 border border-[#3b82f6] bg-[#1a1a25] rounded-sm"/>Activité
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block w-3 h-3 rotate-45 border border-[#c9a84c] bg-[#2d2410]"/>ET / OU
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block w-7 h-3 rounded-full border border-[#34d399] bg-[#052e16]"/>Résultat
-          </span>
+        <p className="text-[9px] font-bold text-[#7a7891] uppercase tracking-widest mb-1">Exemple — Traitement d&apos;une commande reçue</p>
+        <p className="text-[8px] text-[#4a4860] mb-3">Processus métier · 5 acteurs · <span className="text-amber-400">étapes superflues en amber</span></p>
+
+        {/* Légende acteurs */}
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {(Object.entries(SER_ACTORS) as [SerActorKey, { badge: string; label: string }][]).map(([k, s]) => (
+            <span key={k} className={`inline-block text-[7px] font-semibold px-1.5 py-0.5 rounded-full border ${s.badge}`}>
+              {s.label}{(k === 'client' || k === 'fournisseur') ? ' (ext.)' : ''}
+            </span>
+          ))}
         </div>
 
-        <svg viewBox="0 0 300 390" className="w-full max-w-xs mx-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Légende formes */}
+        <div className="flex flex-wrap gap-x-3 gap-y-1 text-[7.5px] text-[#7a7891] mb-4">
+          <span className="flex items-center gap-1"><span className="inline-block w-5 h-2.5 rounded-full border border-dashed border-[#60a5fa]"/>Événement</span>
+          <span className="flex items-center gap-1"><span className="inline-block w-5 h-2.5 border border-[#3b82f6] rounded-sm"/>Opération</span>
+          <span className="flex items-center gap-1"><span className="inline-block w-2.5 h-2.5 rotate-45 border border-[#c9a84c]"/>ET/OU</span>
+          <span className="flex items-center gap-1"><span className="inline-block w-5 h-2.5 rounded-full border border-[#34d399]"/>Résultat</span>
+        </div>
 
-          {/* ── DEUX ÉVÉNEMENTS → ET ── */}
-          {/* Evt 1 */}
-          <ellipse cx="80" cy="22" rx="72" ry="15" stroke="#60a5fa" strokeWidth="1.5" strokeDasharray="4,3" fill="#0d1b2e"/>
-          <text x="80" y="26" textAnchor="middle" fill="#93c5fd" fontSize="8" fontFamily="sans-serif">Commande reçue</text>
-          {/* Evt 2 */}
-          <ellipse cx="222" cy="22" rx="72" ry="15" stroke="#60a5fa" strokeWidth="1.5" strokeDasharray="4,3" fill="#0d1b2e"/>
-          <text x="222" y="26" textAnchor="middle" fill="#93c5fd" fontSize="8" fontFamily="sans-serif">Stock vérifié</text>
-          {/* Lignes vers ET */}
-          <line x1="80" y1="37" x2="130" y2="58" stroke="#4a4860" strokeWidth="1.2"/>
-          <line x1="222" y1="37" x2="170" y2="58" stroke="#4a4860" strokeWidth="1.2"/>
-          {/* ET — losange */}
-          <polygon points="150,58 176,74 150,90 124,74" fill="#2d2410" stroke="#c9a84c" strokeWidth="1.5"/>
-          <text x="150" y="78" textAnchor="middle" fill="#c9a84c" fontSize="10" fontFamily="sans-serif" fontWeight="bold">ET</text>
-          {/* Label explication */}
-          <text x="150" y="105" textAnchor="middle" fill="#7a7891" fontSize="7" fontFamily="sans-serif" fontStyle="italic">les deux événements sont requis</text>
+        {/* FLUX PRINCIPAL */}
+        <div className="flex flex-col items-center">
 
-          {/* ↓ */}
-          <line x1="150" y1="110" x2="150" y2="126" stroke="#4a4860" strokeWidth="1.5"/>
-          <polygon points="145,123 150,130 155,123" fill="#4a4860"/>
+          <SerEvt label="Commande reçue" actor="client" />
+          <SerArr />
+          <SerOp label="Enregistrement de la commande" actor="commercial" />
+          <SerArr />
+          <SerRes label="Commande enregistrée" />
+          <SerArr />
+          <SerOp label="Recopie manuelle sur bon papier" actor="asst" warn />
+          <SerArr />
+          <SerRes label="Bon de commande établi" />
+          <SerArr />
+          <SerOp label="Transmission du bon par coursier" actor="asst" warn />
+          <SerArr />
+          <SerRes label="Bon transmis au magasinier" />
+          <SerArr />
+          <SerOp label="Vérification du stock disponible" actor="magasinier" />
+          <SerArr />
+          <SerDiamond label="OU" type="OU" />
 
-          {/* Activité — rectangle */}
-          <rect x="22" y="130" width="256" height="44" rx="3" fill="#1a1a25" stroke="#3b82f6" strokeWidth="1.5"/>
-          <text x="150" y="147" textAnchor="middle" fill="#60a5fa" fontSize="7.5" fontFamily="sans-serif" fontWeight="bold">ACTIVITÉ — Service Commercial</text>
-          <text x="150" y="164" textAnchor="middle" fill="#e5e3f0" fontSize="9.5" fontFamily="sans-serif">Traitement de la commande</text>
+          {/* Branches parallèles */}
+          <div className="w-full grid grid-cols-2 gap-2 my-1">
+            <div className="flex flex-col items-center border-l border-[#252535] pl-1">
+              <p className="text-[7px] text-[#4a4860] italic mb-1">Stock suffisant</p>
+              <SerOp label="Préparation de la commande" actor="magasinier" />
+              <SerArr />
+              <SerRes label="Commande préparée" />
+            </div>
+            <div className="flex flex-col items-center border-r border-[#252535] pr-1">
+              <p className="text-[7px] text-[#4a4860] italic mb-1">Stock insuffisant</p>
+              <SerOp label="Appel téléphonique fournisseur" actor="commercial" warn />
+              <SerArr />
+              <SerEvt label="Commande fournisseur passée" actor="fournisseur" />
+              <SerArr />
+              <SerOp label="Réception et contrôle livraison" actor="magasinier" />
+              <SerArr />
+              <SerRes label="Stock reconstitué" />
+            </div>
+          </div>
 
-          {/* ↓ */}
-          <line x1="150" y1="174" x2="150" y2="192" stroke="#4a4860" strokeWidth="1.5"/>
-          <polygon points="145,189 150,196 155,189" fill="#4a4860"/>
+          <SerDiamond label="ET" type="ET" />
+          <SerArr />
+          <SerOp label="Émission de la facture client" actor="asst" />
+          <SerArr />
+          <SerRes label="Facture émise et envoyée" />
 
-          {/* OU — losange */}
-          <polygon points="150,196 185,215 150,234 115,215" fill="#2d2410" stroke="#c9a84c" strokeWidth="1.5"/>
-          <text x="150" y="219" textAnchor="middle" fill="#c9a84c" fontSize="10" fontFamily="sans-serif" fontWeight="bold">OU</text>
-
-          {/* Règles d'émission */}
-          <text x="72" y="250" textAnchor="middle" fill="#7a7891" fontSize="7.5" fontFamily="sans-serif" fontStyle="italic">Si solvable</text>
-          <text x="228" y="250" textAnchor="middle" fill="#7a7891" fontSize="7.5" fontFamily="sans-serif" fontStyle="italic">Si risque crédit</text>
-
-          {/* Branches */}
-          <line x1="115" y1="234" x2="72" y2="260" stroke="#4a4860" strokeWidth="1.5"/>
-          <line x1="185" y1="234" x2="228" y2="260" stroke="#4a4860" strokeWidth="1.5"/>
-
-          {/* Résultat 1 — vert */}
-          <ellipse cx="66" cy="277" rx="63" ry="16" stroke="#34d399" strokeWidth="1.5" fill="#052e16"/>
-          <line x1="3" y1="289" x2="129" y2="289" stroke="#34d399" strokeWidth="1.2"/>
-          <text x="66" y="281" textAnchor="middle" fill="#6ee7b7" fontSize="8.5" fontFamily="sans-serif">Bon de préparation</text>
-
-          {/* Résultat 2 — rouge */}
-          <ellipse cx="234" cy="277" rx="63" ry="16" stroke="#f87171" strokeWidth="1.5" fill="#2d0707"/>
-          <line x1="171" y1="289" x2="297" y2="289" stroke="#f87171" strokeWidth="1.2"/>
-          <text x="234" y="281" textAnchor="middle" fill="#fca5a5" fontSize="8.5" fontFamily="sans-serif">Commande bloquée</text>
-
-          {/* Légende bas */}
-          <line x1="20" y1="312" x2="280" y2="312" stroke="#252535" strokeWidth="0.5"/>
-          <text x="150" y="326" textAnchor="middle" fill="#4a4860" fontSize="7.5" fontFamily="sans-serif">Événement = ovale pointillé · Résultat = ovale + barre</text>
-          <text x="150" y="339" textAnchor="middle" fill="#4a4860" fontSize="7.5" fontFamily="sans-serif">ET = tous événements requis · OU = un seul suffit</text>
-          <text x="150" y="352" textAnchor="middle" fill="#4a4860" fontSize="7.5" fontFamily="sans-serif">N1 = extérieur seul · N2 = services internes inclus</text>
-          <text x="150" y="368" textAnchor="middle" fill="#c9a84c" fontSize="7.5" fontFamily="sans-serif" fontWeight="bold">But du SER : identifier les dysfonctionnements du processus</text>
-          <text x="150" y="381" textAnchor="middle" fill="#4a4860" fontSize="7.5" fontFamily="sans-serif">pour l&apos;optimiser — doublons, délais, résultats manquants</text>
-
-        </svg>
+        </div>
       </div>
+
+      {/* Explication textuelle */}
+      <div className="bg-[#13131a] border border-[#252535] rounded-xl px-4 py-3">
+        <p className="text-[9px] font-bold text-[#e5e3f0] uppercase tracking-widest mb-2">Explication textuelle du processus</p>
+        <div className="space-y-1 text-[8.5px] text-[#7a7891] leading-relaxed">
+          {[
+            "① La réception d'une commande client déclenche le processus.",
+            "② Le commercial enregistre la commande dans le système.",
+            "③ ⚠ L'assistante admin recopie manuellement les infos sur un bon papier (doublon inutile).",
+            "④ ⚠ Elle transmet ce bon via un coursier interne (délai, risque de perte).",
+            "⑤ Le magasinier vérifie le stock disponible.",
+            "⑥ Si stock OK → le magasinier prépare la commande directement.",
+            "⑦ ⚠ Si stock KO → le commercial appelle le fournisseur par téléphone (pas de traçabilité).",
+            "⑧ Le fournisseur passe une commande ; le magasinier réceptionne et contrôle la livraison.",
+            "⑨ Les deux branches se synchronisent (ET) : la facture n'est émise qu'une fois la commande prête.",
+            "⑩ L'assistante admin émet la facture → résultat final du processus.",
+          ].map(s => <p key={s}>{s}</p>)}
+        </div>
+      </div>
+
+      {/* Pistes d'optimisation */}
+      <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl px-4 py-3">
+        <p className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest mb-2">Pistes d&apos;optimisation identifiées</p>
+        <div className="space-y-1 text-[8.5px] text-emerald-200/80 leading-relaxed">
+          <p>→ Supprimer la recopie papier : le magasinier accède directement au SI.</p>
+          <p>→ Remplacer l&apos;appel téléphonique par une commande fournisseur dématérialisée (EDI).</p>
+          <p>→ Résultat : 3 étapes supprimées, délai réduit, traçabilité totale.</p>
+        </div>
+      </div>
+
     </div>
   )
 }
