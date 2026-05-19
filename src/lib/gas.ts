@@ -62,10 +62,14 @@ export interface Fiche {
 // — API —
 
 async function gasCall<T>(payload: object): Promise<T> {
-  const response = await fetch('/api/gas', {
+  const url = process.env.NEXT_PUBLIC_GAS_URL
+  if (!url) throw new Error('NEXT_PUBLIC_GAS_URL non configuré')
+
+  const response = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(payload),
+    redirect: 'follow',
   })
 
   const data = await response.json()
