@@ -91,6 +91,59 @@ export default function RedactionModule({ question, accessCode, onBack }: Props)
   const noteBg = (n: number) =>
     n >= 14 ? 'border-emerald-500/20 bg-emerald-500/5' : n >= 10 ? 'border-amber-500/20 bg-amber-500/5' : 'border-red-500/20 bg-red-500/5'
 
+  const renderFeedback = (text: string) => {
+    const sectionColor = (title: string) => {
+      const t = title.toUpperCase()
+      if (t.includes('FORT') || t.includes('VALID')) return { label: 'text-emerald-400', border: 'border-l-emerald-500/40' }
+      if (t.includes('FAIBLE') || t.includes('MANQU') || t.includes('PÉNALI') || t.includes('ERREUR')) return { label: 'text-red-400', border: 'border-l-red-500/40' }
+      if (t.includes('JUSTIF') || t.includes('NOTE')) return { label: 'text-amber-400', border: 'border-l-amber-500/40' }
+      return { label: 'text-[#c9a84c]', border: 'border-l-[#c9a84c]/40' }
+    }
+
+    const renderInline = (line: string, key: number) => {
+      const parts = line.split(/\*\*(.*?)\*\*/)
+      return (
+        <span key={key} className="text-sm text-[#7a7891] leading-relaxed">
+          {parts.map((p, pi) => pi % 2 === 1
+            ? <strong key={pi} className="text-[#e5e3f0] font-semibold">{p}</strong>
+            : p
+          )}
+        </span>
+      )
+    }
+
+    return text.split(/\n{2,}/).map((block, bi) => {
+      const lines = block.split('\n').filter(Boolean)
+      if (!lines.length) return null
+      const firstLine = lines[0]
+      const headerMatch = firstLine.match(/^\*\*([^*]+)\*\*\s*:?$/)
+      const isHeader = !!headerMatch
+      const headerTitle = headerMatch ? headerMatch[1].replace(/:$/, '').trim() : ''
+      const { label, border } = isHeader ? sectionColor(headerTitle) : { label: '', border: '' }
+      const bodyLines = isHeader ? lines.slice(1) : lines
+
+      return (
+        <div key={bi} className={`pl-3 border-l-2 ${isHeader ? border : 'border-l-transparent'}`}>
+          {isHeader && (
+            <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${label}`}>{headerTitle}</p>
+          )}
+          <div className="space-y-1">
+            {bodyLines.map((line, li) =>
+              line.startsWith('- ') ? (
+                <div key={li} className="flex gap-2 text-sm text-[#7a7891] leading-relaxed">
+                  <span className={`flex-shrink-0 mt-0.5 ${isHeader ? label : 'text-[#c9a84c]'}`}>•</span>
+                  <span>{renderInline(line.slice(2), li)}</span>
+                </div>
+              ) : (
+                <p key={li}>{renderInline(line, li)}</p>
+              )
+            )}
+          </div>
+        </div>
+      )
+    })
+  }
+
   return (
     <div className="space-y-5 animate-fade-in">
       {/* Sujet */}
@@ -206,11 +259,11 @@ export default function RedactionModule({ question, accessCode, onBack }: Props)
 
           {/* Feedback texte */}
           <div className="card p-6">
-            <h3 className="text-sm font-semibold text-[#e5e3f0] mb-3 flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-[#e5e3f0] mb-4 flex items-center gap-2">
               <span className="text-[#c9a84c]">✦</span> Correction détaillée
             </h3>
-            <div className="text-sm text-[#7a7891] leading-relaxed whitespace-pre-wrap">
-              {feedback.feedback}
+            <div className="space-y-4">
+              {renderFeedback(feedback.feedback)}
             </div>
           </div>
 
